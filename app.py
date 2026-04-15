@@ -5,6 +5,8 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import io
+import time
+import requests
 
 # ══════════════════════════════════════════════════════════════════
 #  PAGE CONFIG
@@ -442,22 +444,56 @@ PERIOD_OPTS = {"7 ימים": 7, "30 ימים": 30, "90 ימים": 90}
 # ══════════════════════════════════════════════════════════════════
 #  DATA LAYER
 # ══════════════════════════════════════════════════════════════════
+_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/124.0.0.0 Safari/537.36"
+)
+_MAX_RETRIES = 3
+_RETRY_DELAY = 2.0  # seconds between attempts
+
 @st.cache_data(ttl=300)
 def fetch_series(ticker: str, days: int = 380) -> pd.Series:
-    try:
-        end   = datetime.today()
-        start = end - timedelta(days=days + 20)
-        df = yf.download(ticker, start=start, end=end, progress=False, auto_adjust=True)
-        if df.empty:
-            return pd.Series(dtype=float)
-        col = "Close" if "Close" in df.columns else df.columns[0]
-        s   = df[col].squeeze()
-        if isinstance(s, pd.DataFrame):
-            s = s.iloc[:, 0]
-        s.index = pd.to_datetime(s.index).tz_localize(None)
-        return s.dropna().sort_index()
-    except Exception:
+    """
+    Fetch historical close prices for `ticker`.
+    Uses a browser User-Agent and retries up to _MAX_RETRIES times
+    so Streamlit Cloud IP blocks / transient Yahoo Finance errors
+    don't silently return empty data.
+    """
+    end   = datetime.today()
+    start = end - timedelta(days=days + 20)
+
+    session = requests.Session()
+    session.headers.update({"User-Agent": _UA})
+
+    df = pd.DataFrame()
+    for attempt in range(1, _MAX_RETRIES + 1):
+        try:
+            df = yf.download(
+                ticker,
+                start=start,
+                end=end,
+                progress=False,
+                auto_adjust=True,
+                session=session,
+            )
+            if not df.empty:
+                break          # success — exit retry loop
+        except Exception:
+            pass               # swallow; retry or fall through
+
+        if attempt < _MAX_RETRIES:
+            time.sleep(_RETRY_DELAY)
+
+    if df.empty:
         return pd.Series(dtype=float)
+
+    col = "Close" if "Close" in df.columns else df.columns[0]
+    s   = df[col].squeeze()
+    if isinstance(s, pd.DataFrame):
+        s = s.iloc[:, 0]
+    s.index = pd.to_datetime(s.index).tz_localize(None)
+    return s.dropna().sort_index()
 
 def safe_val(s: pd.Series, offset: int = 0):
     try:
