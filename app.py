@@ -6,7 +6,6 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import io
 import time
-import requests
 
 # ══════════════════════════════════════════════════════════════════
 #  PAGE CONFIG
@@ -444,30 +443,18 @@ PERIOD_OPTS = {"7 ימים": 7, "30 ימים": 30, "90 ימים": 90}
 # ══════════════════════════════════════════════════════════════════
 #  DATA LAYER
 # ══════════════════════════════════════════════════════════════════
-_UA = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/124.0.0.0 Safari/537.36"
-)
-_MAX_RETRIES = 3
-_RETRY_DELAY = 2.0  # seconds between attempts
-
 @st.cache_data(ttl=300)
 def fetch_series(ticker: str, days: int = 380) -> pd.Series:
     """
     Fetch historical close prices for `ticker`.
-    Uses a browser User-Agent and retries up to _MAX_RETRIES times
-    so Streamlit Cloud IP blocks / transient Yahoo Finance errors
-    don't silently return empty data.
+    Retries up to 3 times on empty result or exception,
+    letting yfinance manage its own session and auth internally.
     """
     end   = datetime.today()
     start = end - timedelta(days=days + 20)
 
-    session = requests.Session()
-    session.headers.update({"User-Agent": _UA})
-
     df = pd.DataFrame()
-    for attempt in range(1, _MAX_RETRIES + 1):
+    for attempt in range(1, 4):
         try:
             df = yf.download(
                 ticker,
@@ -475,15 +462,13 @@ def fetch_series(ticker: str, days: int = 380) -> pd.Series:
                 end=end,
                 progress=False,
                 auto_adjust=True,
-                session=session,
             )
             if not df.empty:
-                break          # success — exit retry loop
+                break
         except Exception:
-            pass               # swallow; retry or fall through
-
-        if attempt < _MAX_RETRIES:
-            time.sleep(_RETRY_DELAY)
+            pass
+        if attempt < 3:
+            time.sleep(1)
 
     if df.empty:
         return pd.Series(dtype=float)
