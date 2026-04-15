@@ -223,18 +223,22 @@ div[data-testid="stSpinner"] p {
 .kpi-lbl  { font-size: 0.74rem; color: #64748b; font-weight: 600; margin-bottom: 0.1rem; }
 .kpi-val  {
     font-size: 1.85rem; font-weight: 900; color: #0d1b2a;
-    line-height: 1.05; direction: ltr; text-align: right;
-    letter-spacing: -0.5px;
+    line-height: 1.05; direction: ltr;
+    letter-spacing: -0.5px; display: inline;
 }
-.kpi-row  {
-    display: flex; align-items: center;
-    justify-content: space-between; margin-top: 0.15rem;
+/* value + badge on same line, right-aligned */
+.kpi-valline {
+    display: flex;
+    flex-direction: row-reverse;   /* RTL: value rightmost, badge to its left */
+    align-items: baseline;
+    gap: 0.45rem;
+    margin-top: 0.05rem;
 }
-.kpi-unit { font-size: 0.7rem; color: #94a3b8; }
-.kpi-up   { font-size: 0.78rem; font-weight: 700; color: #dc2626; }
-.kpi-dn   { font-size: 0.78rem; font-weight: 700; color: #16a34a; }
-.kpi-flat { font-size: 0.78rem; color: #94a3b8; }
-.kpi-spark { margin-top: 0.35rem; line-height: 0; }
+.kpi-unit  { font-size: 0.7rem; color: #94a3b8; margin-top: 0.1rem; text-align: right; }
+.kpi-up    { font-size: 0.8rem; font-weight: 700; color: #dc2626; white-space: nowrap; }
+.kpi-dn    { font-size: 0.8rem; font-weight: 700; color: #16a34a; white-space: nowrap; }
+.kpi-flat  { font-size: 0.8rem; color: #94a3b8; }
+.kpi-spark { margin-top: 0.4rem; line-height: 0; width: 100%; }
 
 /* ── Comparison table ────────────────────────────────────────── */
 .cmp-wrap {
@@ -328,17 +332,17 @@ hr { border-color: #dde3ef !important; margin: 1.2rem 0 0.3rem !important; }
 # ══════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-/* ── Tablet: up to 900px ─────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════
+   TABLET  ≤ 900px
+   ════════════════════════════════════════════════════════════════ */
 @media screen and (max-width: 900px) {
 
-    .main .block-container {
-        padding: 0.4rem 1rem 2rem !important;
-    }
+    .main .block-container { padding: 0.4rem 0.9rem 2rem !important; }
 
-    /* Stack all column groups */
+    /* Stack every column group vertically */
     div[data-testid="stHorizontalBlock"] {
         flex-direction: column !important;
-        gap: 0.6rem !important;
+        gap: 0.5rem !important;
     }
     div[data-testid="column"] {
         width: 100% !important;
@@ -347,83 +351,106 @@ st.markdown("""
     }
 
     /* Header */
-    .dash-header { padding: 1.1rem 1.2rem !important; border-radius: 12px !important; }
-    .dash-header h1  { font-size: 1.45rem !important; }
+    .dash-header { padding: 1rem 1.2rem !important; border-radius: 12px !important; }
+    .dash-header h1  { font-size: 1.4rem !important; }
     .dash-header .sub { font-size: 0.8rem !important; }
-    .dash-header .meta {
-        flex-direction: column !important;
-        gap: 0.25rem !important;
-        font-size: 0.72rem !important;
-    }
+    .dash-header .meta { flex-direction: column !important; gap: 0.2rem !important; }
 
-    /* KPI cards — 2-column grid on tablet */
-    .kpi-card { padding: 0.85rem 1rem 0.6rem !important; }
-    .kpi-val  { font-size: 1.6rem !important; }
-    .kpi-lbl  { font-size: 0.72rem !important; }
+    /* KPI cards */
+    .kpi-card    { padding: 0.85rem 1rem 0.6rem !important; }
+    .kpi-val     { font-size: 1.65rem !important; }
+    .kpi-lbl     { font-size: 0.74rem !important; }
+    .kpi-valline { gap: 0.35rem !important; }
+    .kpi-spark   { margin-top: 0.45rem !important; }
+
+    /* Plotly charts — taller on tablet so they breathe */
+    div[data-testid="stPlotlyChart"] iframe,
+    div[data-testid="stPlotlyChart"] > div { min-height: 260px !important; }
 
     /* Section titles */
     .sec-title { font-size: 0.88rem !important; }
 
     /* Comparison table — horizontal scroll */
-    .cmp-wrap  { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
-    .cmp-table { min-width: 480px !important; font-size: 0.82rem !important; }
+    .cmp-wrap  { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+    .cmp-table { min-width: 460px !important; font-size: 0.82rem !important; }
 
-    /* Calculators */
-    .calc-title { font-size: 0.88rem !important; }
-
-    /* Alerts */
-    .alert-banner { font-size: 0.84rem !important; padding: 0.65rem 0.9rem !important; }
+    /* Alerts & calculators */
+    .alert-banner { font-size: 0.84rem !important; }
+    .calc-title   { font-size: 0.88rem !important; }
 
     /* Expander */
     div[data-testid="stExpander"] { border-radius: 10px !important; }
 }
 
-/* ── Mobile: up to 480px ─────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════
+   MOBILE  ≤ 480px
+   ════════════════════════════════════════════════════════════════ */
 @media screen and (max-width: 480px) {
 
-    .main .block-container {
-        padding: 0.3rem 0.5rem 1.5rem !important;
+    .main .block-container { padding: 0.3rem 0.5rem 1.5rem !important; }
+
+    /* Header — slim */
+    .dash-header {
+        padding: 0.85rem 0.9rem !important;
+        border-radius: 10px !important;
+        margin-bottom: 0.5rem !important;
     }
+    .dash-header h1  { font-size: 1.1rem !important; letter-spacing: 0 !important; }
+    .dash-header .sub { display: none !important; }
 
-    /* Header — compact */
-    .dash-header { padding: 0.9rem 1rem !important; border-radius: 10px !important; }
-    .dash-header h1  { font-size: 1.15rem !important; letter-spacing: 0 !important; }
-    .dash-header .sub { display: none !important; }   /* hide tagline on very small */
+    /* KPI cards — comfortable on narrow screen */
+    .kpi-card {
+        padding: 0.75rem 0.9rem 0.5rem !important;
+        border-radius: 10px !important;
+    }
+    .kpi-lbl  { font-size: 0.71rem !important; }
+    .kpi-val  { font-size: 1.45rem !important; letter-spacing: 0 !important; }
+    .kpi-up, .kpi-dn, .kpi-flat { font-size: 0.74rem !important; }
+    .kpi-unit { font-size: 0.68rem !important; }
+    .kpi-spark { margin-top: 0.4rem !important; }
 
-    /* KPI cards */
-    .kpi-card { padding: 0.7rem 0.8rem 0.45rem !important; border-radius: 10px !important; }
-    .kpi-val  { font-size: 1.4rem !important; letter-spacing: 0 !important; }
-    .kpi-lbl  { font-size: 0.7rem !important; }
-    .kpi-unit { font-size: 0.67rem !important; }
-    .kpi-up, .kpi-dn, .kpi-flat { font-size: 0.72rem !important; }
+    /* Plotly trend charts — full width, reasonable height */
+    div[data-testid="stPlotlyChart"] {
+        width: 100% !important;
+    }
+    div[data-testid="stPlotlyChart"] > div > div {
+        width: 100% !important;
+    }
 
     /* Section titles */
     .sec-title {
         font-size: 0.82rem !important;
-        padding: 0.38rem 0.7rem !important;
-        margin: 0.75rem 0 0.35rem !important;
+        padding: 0.36rem 0.7rem !important;
+        margin: 0.7rem 0 0.3rem !important;
     }
 
-    /* Comparison table */
-    .cmp-table { font-size: 0.78rem !important; min-width: 420px !important; }
-    .cmp-table thead th { padding: 0.5rem 0.6rem !important; font-size: 0.74rem !important; }
-    .cmp-table tbody td { padding: 0.45rem 0.6rem !important; }
+    /* Comparison table — scroll + compact */
+    .cmp-wrap  { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+    .cmp-table {
+        min-width: 400px !important;
+        font-size: 0.76rem !important;
+    }
+    .cmp-table thead th { padding: 0.48rem 0.55rem !important; font-size: 0.72rem !important; }
+    .cmp-table tbody td { padding: 0.42rem 0.55rem !important; }
 
     /* Calculators */
-    .calc-title   { font-size: 0.82rem !important; }
+    .calc-title   { font-size: 0.84rem !important; }
     .ship-summary { font-size: 0.8rem !important; padding: 0.6rem 0.8rem !important; }
 
-    /* Alert banners */
-    .alert-banner { font-size: 0.78rem !important; }
+    /* Alerts */
+    .alert-banner { font-size: 0.8rem !important; padding: 0.6rem 0.85rem !important; }
 
-    /* Expander */
+    /* Expander header */
     div[data-testid="stExpanderHeader"] p { font-size: 0.84rem !important; }
 
     /* Buttons */
     div.stButton > button,
-    div.stDownloadButton > button { font-size: 0.84rem !important; padding: 0.45rem 1rem !important; }
+    div.stDownloadButton > button {
+        font-size: 0.84rem !important;
+        padding: 0.45rem 1rem !important;
+    }
 
-    /* Custom footer */
+    /* Footer */
     .custom-footer { font-size: 0.7rem !important; padding: 0.8rem 0 0.3rem !important; }
 }
 </style>
@@ -494,18 +521,20 @@ def pct_diff(new_val, old_val):
 # ══════════════════════════════════════════════════════════════════
 #  SPARKLINE  (inline SVG — 14-day mini-chart)
 # ══════════════════════════════════════════════════════════════════
-def sparkline_svg(s: pd.Series, color: str, w: int = 90, h: int = 34) -> str:
+def sparkline_svg(s: pd.Series, color: str, h: int = 38) -> str:
+    """Full-width responsive sparkline using a fixed viewBox + width=100%."""
+    VW = 200  # internal coordinate space — SVG scales to fill container
     vals = [float(v) for v in s.dropna().tail(14).values]
     if len(vals) < 2:
         return f'<div style="height:{h}px"></div>'
     mn, mx = min(vals), max(vals)
     if mx == mn:
         return f'<div style="height:{h}px"></div>'
-    pad = 3
+    pad = 4
     n   = len(vals)
     pts = []
     for i, v in enumerate(vals):
-        x = round((i / (n - 1)) * (w - pad * 2) + pad, 1)
+        x = round((i / (n - 1)) * (VW - pad * 2) + pad, 1)
         y = round((h - pad * 2) - ((v - mn) / (mx - mn)) * (h - pad * 2) + pad, 1)
         pts.append((x, y))
     poly = " ".join(f"{x},{y}" for x, y in pts)
@@ -513,12 +542,15 @@ def sparkline_svg(s: pd.Series, color: str, w: int = 90, h: int = 34) -> str:
     lx, ly = pts[-1]
     r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
     return (
-        f'<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
-        f'xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:hidden;border-radius:4px">'
+        f'<svg width="100%" height="{h}" viewBox="0 0 {VW} {h}" '
+        f'preserveAspectRatio="none" '
+        f'xmlns="http://www.w3.org/2000/svg" '
+        f'style="display:block;border-radius:4px">'
         f'<polygon points="{fill}" fill="rgba({r},{g},{b},0.10)"/>'
-        f'<polyline points="{poly}" fill="none" stroke="{color}" stroke-width="2" '
-        f'stroke-linejoin="round" stroke-linecap="round"/>'
-        f'<circle cx="{lx}" cy="{ly}" r="2.8" fill="{color}"/>'
+        f'<polyline points="{poly}" fill="none" stroke="{color}" stroke-width="2.5" '
+        f'stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
+        f'<circle cx="{lx}" cy="{ly}" r="4" fill="{color}" '
+        f'vector-effect="non-scaling-stroke"/>'
         f'</svg>'
     )
 
@@ -542,10 +574,13 @@ def kpi_html(label: str, value, unit: str, pct, spark: str) -> str:
         badge = f'<span class="kpi-dn">▼&nbsp;{abs(pct):.2f}%</span>'
     return (
         f'<div class="kpi-card">'
-        f'<div class="kpi-lbl">{label}</div>'
-        f'<div class="kpi-val">{fmt}</div>'
-        f'<div class="kpi-row"><span class="kpi-unit">{unit}</span>{badge}</div>'
-        f'<div class="kpi-spark">{spark}</div>'
+        f'  <div class="kpi-lbl">{label}</div>'
+        f'  <div class="kpi-valline">'
+        f'    <span class="kpi-val">{fmt}</span>'
+        f'    {badge}'
+        f'  </div>'
+        f'  <div class="kpi-unit">{unit}</div>'
+        f'  <div class="kpi-spark">{spark}</div>'
         f'</div>'
     )
 
