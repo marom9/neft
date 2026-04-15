@@ -663,15 +663,24 @@ def trend_chart(series: pd.Series, name: str, color: str,
 def build_excel(data_map: dict) -> bytes:
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+        wrote_any = False
+
         for label, (ticker, unit, _) in ASSETS.items():
-            s = data_map[ticker]
+            s = data_map.get(ticker, pd.Series(dtype=float))
             if len(s) == 0:
-                continue
+                continue                          # skip empty series
             df = s.reset_index()
             df.columns = ["תאריך", f"מחיר ({unit})"]
             df["תאריך"] = pd.to_datetime(df["תאריך"]).dt.strftime("%Y-%m-%d")
             safe_label  = label.replace("/", "-").replace('"', "'")[:28]
             df.to_excel(writer, sheet_name=safe_label, index=False)
+            wrote_any = True
+
+        # openpyxl requires at least one visible sheet
+        if not wrote_any:
+            fallback = pd.DataFrame({"הודעה": ["הנתונים אינם זמינים כרגע. נסה שוב מאוחר יותר."]})
+            fallback.to_excel(writer, sheet_name="Note", index=False)
+
     return buf.getvalue()
 
 # ══════════════════════════════════════════════════════════════════
