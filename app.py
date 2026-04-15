@@ -698,18 +698,31 @@ with st.expander("⚙️  הגדרות תצוגה והתראות מחיר", expa
 # ══════════════════════════════════════════════════════════════════
 #  PRICE ALERT BANNERS
 # ══════════════════════════════════════════════════════════════════
-for triggered, msg in [
-    (brent_cur and brent_cur > alert_brent,
-     f'🚨 <strong>נפט ברנט</strong> עומד על ${brent_cur:.2f}/חבית — מעל ספף ההתראה (${alert_brent:.1f})'),
-    (wti_cur and wti_cur > alert_wti,
-     f'🚨 <strong>נפט WTI</strong> עומד על ${wti_cur:.2f}/חבית — מעל ספף ההתראה (${alert_wti:.1f})'),
-    (usd_cur and usd_cur > alert_usd,
-     f'🚨 <strong>דולר/שקל</strong> עומד על ₪{usd_cur:.4f} — מעל ספף ההתראה (₪{alert_usd:.2f})'),
-    (eur_cur and eur_cur > alert_eur,
-     f'🚨 <strong>אירו/שקל</strong> עומד על ₪{eur_cur:.4f} — מעל ספף ההתראה (₪{alert_eur:.2f})'),
-]:
-    if triggered:
-        st.markdown(f'<div class="alert-banner">{msg}</div>', unsafe_allow_html=True)
+def _alert(html: str) -> None:
+    st.markdown(f'<div class="alert-banner">{html}</div>', unsafe_allow_html=True)
+
+# Each block is guarded independently — f-strings only evaluated when
+# the price value is confirmed not None, preventing TypeError on fetch failure.
+if brent_cur is not None and brent_cur > alert_brent:
+    _alert(
+        f'🚨 <strong>נפט ברנט</strong> עומד על '
+        f'${brent_cur:.2f}/חבית — מעל ספף ההתראה (${alert_brent:.1f})'
+    )
+if wti_cur is not None and wti_cur > alert_wti:
+    _alert(
+        f'🚨 <strong>נפט WTI</strong> עומד על '
+        f'${wti_cur:.2f}/חבית — מעל ספף ההתראה (${alert_wti:.1f})'
+    )
+if usd_cur is not None and usd_cur > alert_usd:
+    _alert(
+        f'🚨 <strong>דולר/שקל</strong> עומד על '
+        f'₪{usd_cur:.4f} — מעל ספף ההתראה (₪{alert_usd:.2f})'
+    )
+if eur_cur is not None and eur_cur > alert_eur:
+    _alert(
+        f'🚨 <strong>אירו/שקל</strong> עומד על '
+        f'₪{eur_cur:.4f} — מעל ספף ההתראה (₪{alert_eur:.2f})'
+    )
 
 # ══════════════════════════════════════════════════════════════════
 #  KPI CARDS  (with 14-day sparklines)
